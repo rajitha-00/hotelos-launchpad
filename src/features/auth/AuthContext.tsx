@@ -33,9 +33,12 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  postLoginRippleRequested: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   refreshContext: () => Promise<void>;
+  requestPostLoginRipple: () => void;
+  dismissPostLoginRipple: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +48,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // stale local data can never expose another tenant's apps or properties.
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [postLoginRippleRequested, setPostLoginRippleRequested] = useState(false);
 
   // Fetch real context from backend GET /users/me
   const syncMeContext = async (fbUser: FirebaseUser): Promise<AuthUser> => {
@@ -144,6 +148,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Ignore firebase signout errors
     }
     setUser(null);
+    setPostLoginRippleRequested(false);
     localStorage.removeItem('hotelos.org_id');
     localStorage.removeItem('hotelos.prop_id');
   };
@@ -167,9 +172,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         isAuthenticated: !!user,
         isLoading,
+        postLoginRippleRequested,
         login,
         logout,
         refreshContext,
+        requestPostLoginRipple: () => setPostLoginRippleRequested(true),
+        dismissPostLoginRipple: () => setPostLoginRippleRequested(false),
       }}
     >
       {children}

@@ -8,7 +8,7 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, requestPostLoginRipple } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,6 +26,7 @@ export const LoginPage: React.FC = () => {
     const result = await login(email.trim(), password);
     if (result.success) {
       navigate(from, { replace: true });
+      window.requestAnimationFrame(requestPostLoginRipple);
     } else {
       setError(result.message || 'Authentication failed. Please check your credentials.');
     }
