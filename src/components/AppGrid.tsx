@@ -1,7 +1,7 @@
 import React from 'react';
 import { IAppItem } from '../interfaces';
-import { AppCard } from './AppCard';
-import { Star, SearchX } from 'lucide-react';
+import { AppTile } from './AppTile';
+import { SearchX } from 'lucide-react';
 
 interface AppGridProps {
   apps: IAppItem[];
@@ -13,9 +13,7 @@ interface AppGridProps {
 
 export const AppGrid: React.FC<AppGridProps> = ({
   apps,
-  favoriteApps,
   searchQuery,
-  onToggleFavorite,
   onInspectApp,
 }) => {
   if (apps.length === 0) {
@@ -35,53 +33,16 @@ export const AppGrid: React.FC<AppGridProps> = ({
   }
 
   return (
-    <div className="space-y-8 my-6">
-      {/* Favorites Section (if any & no search query) */}
-      {!searchQuery && favoriteApps.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="p-1 rounded-lg bg-amber-50 text-amber-500">
-              <Star className="w-4 h-4" fill="currentColor" />
-            </div>
-            <h2 className="text-sm font-extrabold text-slate-900 tracking-tight">
-              Starred Shortcuts
-            </h2>
-            <span className="text-xs text-slate-400">({favoriteApps.length})</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {favoriteApps.map((app) => (
-              <AppCard
-                key={`fav-${app.id}`}
-                app={app}
-                onToggleFavorite={onToggleFavorite}
-                onInspectApp={onInspectApp}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Main Grid Section */}
-      <section>
-        <div className="flex items-center justify-between gap-4 mb-3">
-          <h2 className="text-sm font-extrabold text-slate-900 tracking-tight">
-            {searchQuery ? `Search Results (${apps.length})` : 'All Applications & Modules'}
-          </h2>
-          <span className="text-xs font-semibold text-slate-500">
-            {apps.length} Applications Available
-          </span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {apps.map((app) => (
-            <AppCard
-              key={app.id}
-              app={app}
-              onToggleFavorite={onToggleFavorite}
-              onInspectApp={onInspectApp}
-            />
-          ))}
-        </div>
-      </section>
+    <div className="w-full py-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-8 gap-x-4 sm:gap-x-8 justify-items-center">
+        {apps.map((app) => (
+          <AppTile
+            key={app.id}
+            app={app}
+            onSelect={onInspectApp}
+          />
+        ))}
+      </div>
     </div>
   );
 };

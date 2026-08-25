@@ -29,6 +29,8 @@ export interface IAppItem {
   iconBg: string;
   iconColor: string;
   gradientBorder: string;
+  badge?: string;
+  badgeColor?: string;
   badgeText: string;
   metrics: IAppMetrics;
   roles: string[];

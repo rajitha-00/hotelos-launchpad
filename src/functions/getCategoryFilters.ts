@@ -8,13 +8,11 @@ export interface ICategoryFilterItem {
 
 export const getCategoryFilters = (apps: IAppItem[]): ICategoryFilterItem[] => {
   const categories: { id: AppCategory; label: string }[] = [
-    { id: 'ALL', label: 'All Applications' },
-    { id: 'OPERATIONS', label: 'PMS & Desk' },
-    { id: 'DINING', label: 'F&B & POS' },
-    { id: 'ADMIN', label: 'Platform Control' },
-    { id: 'PUBLIC', label: 'Public & Showcase' },
-    { id: 'DEVELOPER', label: 'Developer & API' },
-    { id: 'INTEGRATION', label: 'Integrations' },
+    { id: 'ALL', label: 'All Apps' },
+    { id: 'OPERATIONS', label: 'Operations' },
+    { id: 'DINING', label: 'F&B' },
+    { id: 'ADMIN', label: 'Management' },
+    { id: 'PUBLIC', label: 'Public Web' },
   ];
 
   return categories.map((cat) => {

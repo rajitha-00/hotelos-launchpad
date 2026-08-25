@@ -36,7 +36,7 @@ export const SystemStatsBanner: React.FC<SystemStatsBannerProps> = ({
           <Wifi className="w-4.5 h-4.5" />
         </div>
         <div>
-          <p className="text-[11px] font-medium text-slate-500">SLA Uptime</p>
+          <p className="text-[11px] font-medium text-slate-500">Server Uptime</p>
           <p className="text-sm font-bold text-slate-900">{metrics.systemUptime}</p>
         </div>
       </div>

@@ -6,14 +6,27 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
 } from 'firebase/auth';
+import { ISystemMetrics, ITenantInfo } from '../../interfaces';
 
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string;
   role: string;
   tenantId: string;
   propertyId?: string;
+  accessibleAppIds?: string[];
+  property?: {
+    id: string;
+    name: string;
+    city?: string;
+    country?: string;
+    roomsCount: number;
+    tier: string;
+  };
+  properties: ITenantInfo[];
+  metrics: ISystemMetrics | null;
 }
 
 interface AuthContextType {
@@ -22,67 +35,54 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
+  refreshContext: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = 'nami_os_auth_session';
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  });
+  // Firebase persists the login. The tenant bootstrap is always fetched again so
+  // stale local data can never expose another tenant's apps or properties.
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch real context from backend GET /users/me
   const syncMeContext = async (fbUser: FirebaseUser): Promise<AuthUser> => {
-    try {
-      const token = await fbUser.getIdToken();
-      const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1';
-      const res = await fetch(`${apiUrl}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const token = await fbUser.getIdToken();
+    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+    const res = await fetch(`${apiUrl}/users/me`, {
+      cache: 'no-store',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      if (res.ok) {
-        const json = await res.json();
-        const data = json.data;
-        if (data?.organizationId) {
-          localStorage.setItem('hotelos.org_id', data.organizationId);
-        }
-        if (data?.propertyId) {
-          localStorage.setItem('hotelos.prop_id', data.propertyId);
-        }
-
-        return {
-          id: data?.user?.id || fbUser.uid,
-          name: data?.user?.fullName || fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
-          email: fbUser.email || '',
-          role: data?.user?.role || 'SUPER_ADMIN',
-          tenantId: data?.organizationId || '',
-          propertyId: data?.propertyId || undefined,
-        };
-      }
-    } catch {
-      // Backend error fallback to Firebase token identity
+    if (!res.ok) {
+      throw new Error(`Unable to load authenticated tenant context (${res.status})`);
     }
 
+    const json = await res.json();
+    const data = json.data;
+    const role = String(data?.user?.role || '').toLowerCase();
+    if (!data?.user?.id || (!data?.organizationId && role !== 'super_admin')) {
+      throw new Error('Authenticated user has no tenant assignment');
+    }
+
+    if (data.organizationId) localStorage.setItem('hotelos.org_id', data.organizationId);
+    if (data.property?.id) localStorage.setItem('hotelos.prop_id', data.property.id);
+
     return {
-      id: fbUser.uid,
-      name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
-      email: fbUser.email || '',
-      role: 'SUPER_ADMIN',
-      tenantId: localStorage.getItem('hotelos.org_id') || '',
-      propertyId: localStorage.getItem('hotelos.prop_id') || undefined,
+      id: data.user.id,
+      name: data.user.fullName || fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
+      email: data.user.email || fbUser.email || '',
+      avatarUrl: data.user.avatarUrl || undefined,
+      role,
+      tenantId: data.organizationId || '',
+      propertyId: data.property?.id || undefined,
+      accessibleAppIds: Array.isArray(data.user.accessibleAppIds) ? data.user.accessibleAppIds : [],
+      property: data.property || undefined,
+      properties: Array.isArray(data.properties) ? data.properties : [],
+      metrics: data.metrics || null,
     };
   };
 
@@ -90,12 +90,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (fbUser: FirebaseUser | null) => {
       setIsLoading(true);
       if (fbUser) {
-        const authUser = await syncMeContext(fbUser);
-        setUser(authUser);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
+        try {
+          const authUser = await syncMeContext(fbUser);
+          setUser(authUser);
+        } catch {
+          // Fail closed: never substitute a tenant user with super-admin/demo data.
+          setUser(null);
+        }
       } else {
         setUser(null);
-        localStorage.removeItem(AUTH_STORAGE_KEY);
       }
       setIsLoading(false);
     });
@@ -112,20 +115,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Step 2: Bootstrap real /users/me backend context
         const loggedUser = await syncMeContext(cred.user);
         setUser(loggedUser);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(loggedUser));
         setIsLoading(false);
         return { success: true };
       }
       setIsLoading(false);
       return { success: false, message: 'Authentication failed' };
-    } catch (err: any) {
+    } catch (err: unknown) {
       setIsLoading(false);
       let errorMsg = 'Invalid email or password.';
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      const errorCode = typeof err === 'object' && err !== null && 'code' in err
+        ? String(err.code)
+        : '';
+      if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential') {
         errorMsg = 'Invalid login credentials. Please check your email and password.';
-      } else if (err.code === 'auth/too-many-requests') {
+      } else if (errorCode === 'auth/too-many-requests') {
         errorMsg = 'Access disabled due to repeated failed attempts. Please try again later.';
-      } else if (err.message) {
+      } else if (err instanceof Error && err.message) {
         errorMsg = err.message;
       }
       return { success: false, message: errorMsg };
@@ -139,9 +144,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Ignore firebase signout errors
     }
     setUser(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
     localStorage.removeItem('hotelos.org_id');
     localStorage.removeItem('hotelos.prop_id');
+  };
+
+  const refreshContext = async (): Promise<void> => {
+    const currentUser = firebaseAuth.currentUser;
+    if (!currentUser) return;
+    setIsLoading(true);
+    try {
+      setUser(await syncMeContext(currentUser));
+    } catch {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -152,6 +169,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         login,
         logout,
+        refreshContext,
       }}
     >
       {children}

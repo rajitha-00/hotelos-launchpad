@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useAuth } from '../features/auth/AuthContext';
 import { RootState } from '../app/store';
 import {
   AppCategory,
@@ -7,10 +8,9 @@ import {
   ITenantInfo,
   ISystemMetrics,
 } from '../interfaces';
-import { HOTEL_OS_APPS, DEFAULT_TENANTS } from '../constants';
+import { HOTEL_OS_APPS } from '../constants';
 import { getCategoryFilters, ICategoryFilterItem } from '../functions';
 import {
-  useGetLaunchpadDataQuery,
   setActiveTenantId,
   setSelectedCategory as setCategoryAction,
   setSearchQuery as setSearchAction,
@@ -41,6 +41,7 @@ export interface IUseLaunchpadReturn {
 
 export const useLaunchpad = (): IUseLaunchpadReturn => {
   const dispatch = useDispatch();
+  const { user, isLoading, refreshContext } = useAuth();
 
   const {
     activeTenantId,
@@ -50,18 +51,39 @@ export const useLaunchpad = (): IUseLaunchpadReturn => {
     inspectAppId,
   } = useSelector((state: RootState) => state.launchpad);
 
-  // RTK Query endpoint hook
-  const { data, isLoading, isError, refetch } = useGetLaunchpadDataQuery(
-    activeTenantId ? { tenantId: activeTenantId } : undefined
-  );
-
-  // Fallback to constants if backend API is not yet loaded or unreachable
-  const appsFromData = data?.apps || HOTEL_OS_APPS;
-  const tenants = data?.tenants || DEFAULT_TENANTS;
+  // The API returns authorization IDs only. Presentation metadata stays in the
+  // frontend registry and an empty ID list intentionally renders no apps.
+  const appsFromData = useMemo(() => {
+    const allowedIds = new Set(user?.accessibleAppIds || []);
+    return HOTEL_OS_APPS.filter((app) => allowedIds.has(app.id));
+  }, [user?.accessibleAppIds]);
+  const isSuperAdmin = user?.role?.toLowerCase() === 'super_admin';
+  const assignedProperty: ITenantInfo | null = user?.property
+    ? {
+        id: user.property.id,
+        name: user.property.name,
+        city: user.property.city || '',
+        country: user.property.country || '',
+        roomsCount: user.property.roomsCount,
+        tier: user.property.tier,
+      }
+    : null;
+  const tenants = isSuperAdmin
+    ? user?.properties || []
+    : assignedProperty
+      ? [assignedProperty]
+      : [];
   const activeTenant =
-    data?.activeTenant ||
-    tenants.find((t) => t.id === activeTenantId) ||
-    tenants[0];
+    (isSuperAdmin ? tenants.find((tenant) => tenant.id === activeTenantId) : null) ||
+    assignedProperty ||
+    tenants[0] || {
+      id: '',
+      name: 'No property assigned',
+      city: '',
+      country: '',
+      roomsCount: 0,
+      tier: '',
+    };
 
   // Map favorite status dynamically
   const apps = useMemo(() => {
@@ -147,16 +169,20 @@ export const useLaunchpad = (): IUseLaunchpadReturn => {
 
   // Computed metrics from API or fallback
   const metrics: ISystemMetrics = useMemo(() => {
-    if (data?.metrics) return data.metrics;
+    if (user?.metrics) return user.metrics;
     return {
-      activeAppsCount: apps.filter((a) => a.status === 'OPERATIONAL').length,
+      activeAppsCount: apps.length,
       totalRoomsManaged: activeTenant.roomsCount,
-      apiLatencyMs: 28,
-      systemUptime: '99.99%',
-      activeStaffCount: 34,
-      activeOrdersCount: 18,
+      apiLatencyMs: 0,
+      systemUptime: '—',
+      activeStaffCount: 0,
+      activeOrdersCount: 0,
     };
-  }, [data, apps, activeTenant]);
+  }, [user, apps, activeTenant]);
+
+  const refetch = useCallback(() => {
+    void refreshContext();
+  }, [refreshContext]);
 
   return {
     apps,
@@ -175,7 +201,7 @@ export const useLaunchpad = (): IUseLaunchpadReturn => {
     toggleFavorite,
     metrics,
     isLoading,
-    isError,
+    isError: !isLoading && (!user || !assignedProperty),
     refetch,
   };
 };

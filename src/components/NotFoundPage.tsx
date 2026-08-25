@@ -20,7 +20,7 @@ export const NotFoundPage: React.FC = () => {
             Application Route Not Found
           </h1>
           <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-            The page or module URL you requested does not exist or has been moved within the Hotel OS ecosystem.
+            The page or module URL you requested does not exist or has been moved within the NamiOS ecosystem.
           </p>
         </div>
 

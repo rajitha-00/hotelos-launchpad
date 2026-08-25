@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ITenantInfo } from '../interfaces';
-import { DEFAULT_TENANTS } from '../constants';
 import { useAuth } from '../features/auth/AuthContext';
 import { NamiOsLogo } from './NamiOsLogo';
 import {
@@ -19,7 +18,7 @@ interface LaunchpadHeaderProps {
 
 export const LaunchpadHeader: React.FC<LaunchpadHeaderProps> = ({
   activeTenant,
-  tenants = DEFAULT_TENANTS,
+  tenants = [],
   onSelectTenant,
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -44,7 +43,7 @@ export const LaunchpadHeader: React.FC<LaunchpadHeaderProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const tenantList = tenants.length > 0 ? tenants : DEFAULT_TENANTS;
+  const tenantList = tenants;
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/90 shadow-xs transition-all">
@@ -95,6 +94,11 @@ export const LaunchpadHeader: React.FC<LaunchpadHeaderProps> = ({
                       Select property context
                     </p>
                   </div>
+                  {tenantList.length === 0 && (
+                    <p className="px-3 py-3 text-xs text-amber-700 bg-amber-50 rounded-xl">
+                      No property is assigned to this account.
+                    </p>
+                  )}
                   {tenantList.map((tenant) => (
                     <button
                       key={tenant.id}
@@ -126,9 +130,20 @@ export const LaunchpadHeader: React.FC<LaunchpadHeaderProps> = ({
 
           {/* Authenticated User & Logout */}
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 text-blue-800 flex items-center justify-center font-bold text-xs shadow-xs">
-              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}
-            </div>
+            {user?.avatarUrl || (typeof window !== 'undefined' && window.localStorage.getItem('hotelos.avatar')) ? (
+              <img
+                src={user?.avatarUrl || window.localStorage.getItem('hotelos.avatar')!}
+                alt={user?.name || 'User'}
+                className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-xs"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 text-blue-800 flex items-center justify-center font-bold text-xs shadow-xs">
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}
+              </div>
+            )}
             <div className="hidden sm:block text-left">
               <p className="text-xs font-bold text-slate-900 leading-tight">
                 {user?.name || 'Admin User'}

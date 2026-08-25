@@ -39,7 +39,7 @@ export const LoginPage: React.FC = () => {
           <NamiOsLogo size="full" variant="master" className="justify-center mb-3" />
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">Sign In to Launchpad</h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Access Hotel OS Property Management & Microservices Hub
+            Access NamiOS Property Management & Microservices Hub
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export const LoginPage: React.FC = () => {
 
         <div className="mt-8 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>Secured by Firebase & Hotel OS API Service</span>
+          <span>Secured by Firebase & NamiOS API Service</span>
         </div>
       </div>
     </div>
