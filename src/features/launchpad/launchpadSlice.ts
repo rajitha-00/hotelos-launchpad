@@ -50,6 +50,12 @@ export const launchpadSlice = createSlice({
     setInspectAppId: (state, action: PayloadAction<string | null>) => {
       state.inspectAppId = action.payload;
     },
+    clearTenantSession: (state) => {
+      state.activeTenantId = null;
+      state.inspectAppId = null;
+      state.searchQuery = '';
+      state.selectedCategory = 'ALL';
+    },
   },
 });
 
@@ -59,6 +65,7 @@ export const {
   setSearchQuery,
   toggleFavoriteApp,
   setInspectAppId,
+  clearTenantSession,
 } = launchpadSlice.actions;
 
 export default launchpadSlice.reducer;

@@ -7,6 +7,9 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import { ISystemMetrics, ITenantInfo } from '../../interfaces';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '../../app/store';
+import { clearTenantSession } from '../launchpad/launchpadSlice';
 
 export interface AuthUser {
   id: string;
@@ -44,6 +47,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const dispatch = useDispatch<AppDispatch>();
   // Firebase persists the login. The tenant bootstrap is always fetched again so
   // stale local data can never expose another tenant's apps or properties.
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -93,6 +97,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (fbUser: FirebaseUser | null) => {
       setIsLoading(true);
+      dispatch(clearTenantSession());
+      localStorage.removeItem('hotelos.org_id');
+      localStorage.removeItem('hotelos.prop_id');
+      localStorage.removeItem('hotelos.avatar');
       if (fbUser) {
         try {
           const authUser = await syncMeContext(fbUser);
@@ -108,7 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [dispatch]);
 
   const login = async (email: string, pass: string): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
@@ -148,6 +156,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Ignore firebase signout errors
     }
     setUser(null);
+    dispatch(clearTenantSession());
     setPostLoginRippleRequested(false);
     localStorage.removeItem('hotelos.org_id');
     localStorage.removeItem('hotelos.prop_id');
