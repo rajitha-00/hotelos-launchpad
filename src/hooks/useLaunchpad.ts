@@ -58,10 +58,18 @@ export const useLaunchpad = (): IUseLaunchpadReturn => {
     return HOTEL_OS_APPS.filter((app) => allowedIds.has(app.id));
   }, [user?.accessibleAppIds]);
   const isSuperAdmin = user?.role?.toLowerCase() === 'super_admin';
+  const tenantDisplayName =
+    user?.tenantName ||
+    (user?.property?.name && user.property.name !== 'The Grand Villa' && user.property.name !== 'Default Property'
+      ? user.property.name
+      : '') ||
+    (typeof window !== 'undefined' ? window.localStorage.getItem('hotelos.tenant_name') : null) ||
+    '';
+
   const assignedProperty: ITenantInfo | null = user?.property
     ? {
         id: user.property.id,
-        name: user.property.name,
+        name: tenantDisplayName || user.property.name,
         city: user.property.city || '',
         country: user.property.country || '',
         roomsCount: user.property.roomsCount,

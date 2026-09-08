@@ -18,6 +18,7 @@ export interface AuthUser {
   avatarUrl?: string;
   role: string;
   tenantId: string;
+  tenantName?: string;
   propertyId?: string;
   accessibleAppIds?: string[];
   property?: {
@@ -76,8 +77,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Authenticated user has no tenant assignment');
     }
 
+    const tenantName = data.tenantName || data.organizationName || data.organization?.name || data.property?.name || '';
     if (data.organizationId) localStorage.setItem('hotelos.org_id', data.organizationId);
     if (data.property?.id) localStorage.setItem('hotelos.prop_id', data.property.id);
+    if (tenantName) localStorage.setItem('hotelos.tenant_name', tenantName);
 
     return {
       id: data.user.id,
@@ -86,9 +89,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       avatarUrl: data.user.avatarUrl || undefined,
       role,
       tenantId: data.organizationId || '',
+      tenantName,
       propertyId: data.property?.id || undefined,
       accessibleAppIds: Array.isArray(data.user.accessibleAppIds) ? data.user.accessibleAppIds : [],
-      property: data.property || undefined,
+      property: data.property
+        ? {
+            ...data.property,
+            name: tenantName || data.property.name,
+          }
+        : undefined,
       properties: Array.isArray(data.properties) ? data.properties : [],
       metrics: data.metrics || null,
     };
@@ -100,6 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch(clearTenantSession());
       localStorage.removeItem('hotelos.org_id');
       localStorage.removeItem('hotelos.prop_id');
+      localStorage.removeItem('hotelos.tenant_name');
       localStorage.removeItem('hotelos.avatar');
       if (fbUser) {
         try {
