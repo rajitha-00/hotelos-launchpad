@@ -42,7 +42,7 @@ export const launchpadSlice = createSlice({
     toggleFavoriteApp: (state, action: PayloadAction<string>) => {
       const appId = action.payload;
       if (state.starredAppIds.includes(appId)) {
-        state.starredAppIds = state.starredAppIds.filter((id) => id !== appId);
+        state.starredAppIds = state.starredAppIds.filter((id: string) => id !== appId);
       } else {
         state.starredAppIds.push(appId);
       }
