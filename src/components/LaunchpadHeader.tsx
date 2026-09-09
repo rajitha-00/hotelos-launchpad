@@ -70,6 +70,8 @@ export const LaunchpadHeader: React.FC<LaunchpadHeaderProps> = ({
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
+              aria-expanded={dropdownOpen}
+              aria-label="Select property"
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold transition-all shadow-xs"
             >
               <Building2 className="w-4 h-4 text-blue-600" />
@@ -156,6 +158,7 @@ export const LaunchpadHeader: React.FC<LaunchpadHeaderProps> = ({
               onClick={logout}
               className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-1"
               title="Sign Out"
+              aria-label="Sign out"
             >
               <LogOut className="w-4 h-4" />
             </button>

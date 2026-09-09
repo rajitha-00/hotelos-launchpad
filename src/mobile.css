@@ -1,0 +1,23 @@
+.nami-launchpad-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nami-launchpad-heading p { color: #636366; font-size: 13px; margin: 0 0 4px; }
+.nami-launchpad-heading h1 { font-size: 28px; letter-spacing: -.035em; font-weight: 750; margin: 0; }
+.nami-launchpad-tabs { display: none; }
+@media (max-width: 767px) {
+  body, .nami-launchpad { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #f2f2f7; }
+  .nami-launchpad { min-height: 100dvh; }
+  .nami-launchpad > header { padding-top: env(safe-area-inset-top); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .nami-launchpad > header > div { height: auto; min-height: 72px; flex-wrap: wrap; padding: 12px 16px; gap: 8px; }
+  .nami-launchpad > header > div > div { gap: 8px; }
+  .nami-launchpad > main { padding: 20px max(16px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  .nami-launchpad-apps { padding: 20px 16px; border-radius: 24px; border: 0; box-shadow: 0 4px 20px rgb(0 0 0 / 4%); }
+  .nami-launchpad input { font-size: 16px; }
+  .nami-launchpad button { min-height: 44px; min-width: 44px; touch-action: manipulation; }
+  .nami-launchpad > footer { display: none; }
+  .nami-launchpad[data-mobile-tab="apps"] .nami-launchpad-activity,
+  .nami-launchpad[data-mobile-tab="activity"] .nami-launchpad-apps { display: none; }
+  .nami-launchpad-tabs { position: fixed; z-index: 40; bottom: 0; left: 0; right: 0; display: flex; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); background: rgb(255 255 255 / 92%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid #e5e5ea; }
+  .nami-launchpad-tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 56px; color: #636366; font-size: 11px; font-weight: 600; }
+  .nami-launchpad-tabs button[aria-current] { color: #007aff; }
+  .nami-launchpad-tabs button:active { transform: scale(.96); }
+}
+@media (prefers-reduced-motion: reduce) { .nami-launchpad * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

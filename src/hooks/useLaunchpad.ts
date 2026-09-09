@@ -55,7 +55,35 @@ export const useLaunchpad = (): IUseLaunchpadReturn => {
   // frontend registry and an empty ID list intentionally renders no apps.
   const appsFromData = useMemo(() => {
     const allowedIds = new Set(user?.accessibleAppIds || []);
-    return HOTEL_OS_APPS.filter((app) => allowedIds.has(app.id));
+    return HOTEL_OS_APPS.filter((app) => allowedIds.has(app.id)).map((app) => {
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        const isLocalhost =
+          hostname === 'localhost' ||
+          hostname === '127.0.0.1' ||
+          hostname.endsWith('.local');
+
+        if (isLocalhost && app.port) {
+          return {
+            ...app,
+            url: `http://localhost:${app.port}`,
+          };
+        }
+
+        if (hostname.endsWith('.vercel.app')) {
+          const vercelUrls: Record<string, string> = {
+            'stay-os': 'https://hotelos-stay-os.vercel.app',
+            'dine-os': 'https://hotelos-dine-os.vercel.app',
+            'super-admin': 'https://hotelos-super-admin.vercel.app',
+          };
+          const vercelUrl = vercelUrls[app.id];
+          if (vercelUrl) {
+            return { ...app, url: vercelUrl };
+          }
+        }
+      }
+      return app;
+    });
   }, [user?.accessibleAppIds]);
   const isSuperAdmin = user?.role?.toLowerCase() === 'super_admin';
   const tenantDisplayName =
