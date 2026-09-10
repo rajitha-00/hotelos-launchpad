@@ -7,6 +7,7 @@ import { Lock, Mail, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const { login, isLoading, requestPostLoginRipple } = useAuth();
   const navigate = useNavigate();
@@ -38,9 +39,9 @@ export const LoginPage: React.FC = () => {
         {/* Nami OS Brand Header */}
         <div className="text-center mb-8">
           <NamiOsLogo size="full" variant="master" className="justify-center mb-3" />
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Sign In to Launchpad</h2>
+          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Nami Launchpad</h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Access NamiOS Property Management & Microservices Hub
+            Sign in to the unified property & service launcher
           </p>
         </div>
 
@@ -54,26 +55,28 @@ export const LoginPage: React.FC = () => {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Email Address
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Email address
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <Mail className="w-4 h-4" />
               </div>
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@hotelos.io"
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 required
+                autoFocus
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Password
             </label>
             <div className="relative">
@@ -81,6 +84,7 @@ export const LoginPage: React.FC = () => {
                 <Lock className="w-4 h-4" />
               </div>
               <input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -91,10 +95,23 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
+          <div className="flex items-center justify-between pt-1">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-600">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+              />
+              <span>Remember me</span>
+            </label>
+          </div>
+
           <button
+            id="login-submit"
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-blue-600 text-white font-extrabold text-sm flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-blue-500/20 mt-6 disabled:opacity-50"
+            className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-blue-600 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-blue-500/20 mt-6 disabled:opacity-50"
           >
             {isLoading ? (
               <>
@@ -103,7 +120,7 @@ export const LoginPage: React.FC = () => {
               </>
             ) : (
               <>
-                <span>Sign In</span>
+                <span>Log in</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -112,7 +129,7 @@ export const LoginPage: React.FC = () => {
 
         <div className="mt-8 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>Secured by Firebase & NamiOS API Service</span>
+          <span>Protected by enterprise-grade 256-bit encryption</span>
         </div>
       </div>
     </div>
