@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Fetch real context from backend GET /users/me
   const syncMeContext = async (fbUser: FirebaseUser): Promise<AuthUser> => {
     const token = await fbUser.getIdToken();
-    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL';
     const res = await fetch(`${apiUrl}/users/me`, {
       cache: 'no-store',
       headers: {

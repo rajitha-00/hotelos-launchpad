@@ -5,7 +5,7 @@ import { ILaunchpadData, IAppItem, ITenantInfo } from '../../interfaces';
 export const launchpadApi = createApi({
   reducerPath: 'launchpadApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
+    baseUrl: import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL,
     prepareHeaders: async (headers, { getState }) => {
       try {
         const currentUser = firebaseAuth.currentUser;
